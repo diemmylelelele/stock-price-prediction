@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apple Stock Price Prediction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f9;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            max-width: 450px;
+            width: 90%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        label {
+            font-size: 16px;
+            margin-bottom: 8px;
+            display: block;
+            color: #555;
+        }
+        input, select, button {
+            width: 100%;
+            margin-bottom: 20px;
+            padding: 15px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        input {
+            height: 45px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            cursor: pointer;
+            border: none;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #result {
+            margin-top: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #555;
+            text-align: left;
+        }
+        #result span {
+            display: block;
+            margin-top: 10px;
+            font-size: 18px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Apple Stock Price Prediction</h1>
+        <form id="predictForm">
+            <label for="features">Enter Features (comma-separated):</label>
+            <input type="text" id="features" name="features" placeholder="e.g., 1.2, 2.3, ..." required>
+
+            <label for="predictionType">Select Prediction Type:</label>
+            <select id="predictionType" name="predictionType">
+                <option value="next_day">Predict Next Day</option>
+                <option value="next_3_days">Predict Next 3 Days</option>
+            </select>
+
+            <button type="button" onclick="makePrediction()">Predict</button>
+        </form>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function makePrediction() {
+            const featuresInput = document.getElementById('features').value;
+            const predictionType = document.getElementById('predictionType').value;
+
+            // Convert features to an array of numbers
+            const features = featuresInput.split(',').map(Number);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        features: features,
+                        predictionType: predictionType
+                    })
+                });
+
+                const data = await response.json();
+                const resultDiv = document.getElementById('result');
+
+                // Clear previous results
+                resultDiv.innerHTML = '';
+
+                if (data.error) {
+                    resultDiv.innerHTML = `<span>Error: ${data.error}</span>`;
+                } else {
+                    if (predictionType === "next_day") {
+                        resultDiv.innerHTML = `<span>Prediction for Next Day:</span>
+                                               <span>${data.prediction[0]}</span>`;
+                    } else if (predictionType === "next_3_days") {
+                        resultDiv.innerHTML = `<span>Predictions for Next 3 Days:</span>`;
+                        data.prediction[0].forEach((pred, index) => {
+                            resultDiv.innerHTML += `<span>Day ${index + 1}: ${pred}</span>`;
+                        });
+                    }
+                }
+            } catch (error) {
+                document.getElementById('result').innerText = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
